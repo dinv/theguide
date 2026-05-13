@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wave-Based Structure — Present Tense Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ptf-purple: #7c6fcd;
+  --ptf-purple-soft: rgba(124,111,205,0.12);
+  --ptf-purple-faint: rgba(124,111,205,0.06);
+  --ptf-purple-border: rgba(124,111,205,0.22);
+}
+
+/* THEME: BALANCED (default) */
+body.theme-balanced {
+  --bg: #f7f5f2;
+  --surface: #ffffff;
+  --text: #2a2730;
+  --text-muted: #5a5468;
+  --text-faint: #9490a8;
+  --border: rgba(42,39,48,0.10);
+  --border-mid: rgba(42,39,48,0.18);
+  --accent: var(--ptf-purple);
+  --accent-soft: var(--ptf-purple-soft);
+  --accent-faint: var(--ptf-purple-faint);
+  --accent-border: var(--ptf-purple-border);
+  --heading-font: 'Cormorant Garamond', serif;
+  --body-font: 'DM Sans', sans-serif;
+  --fork-bg: rgba(124,111,205,0.06);
+  --fork-border: rgba(124,111,205,0.20);
+}
+
+/* THEME: SPARE */
+body.theme-spare {
+  --bg: #f2f2f0;
+  --surface: #fafafa;
+  --text: #1a1a1a;
+  --text-muted: #555;
+  --text-faint: #999;
+  --border: rgba(0,0,0,0.08);
+  --border-mid: rgba(0,0,0,0.14);
+  --accent: #3d3d3d;
+  --accent-soft: rgba(61,61,61,0.08);
+  --accent-faint: rgba(61,61,61,0.04);
+  --accent-border: rgba(61,61,61,0.18);
+  --heading-font: 'DM Sans', sans-serif;
+  --body-font: 'DM Sans', sans-serif;
+  --fork-bg: rgba(0,0,0,0.03);
+  --fork-border: rgba(0,0,0,0.12);
+}
+
+/* THEME: WARM */
+body.theme-warm {
+  --bg: #f5efe8;
+  --surface: #fdf8f3;
+  --text: #2d2218;
+  --text-muted: #6b5244;
+  --text-faint: #a8927e;
+  --border: rgba(45,34,24,0.10);
+  --border-mid: rgba(45,34,24,0.18);
+  --accent: #b07d5a;
+  --accent-soft: rgba(176,125,90,0.12);
+  --accent-faint: rgba(176,125,90,0.06);
+  --accent-border: rgba(176,125,90,0.25);
+  --heading-font: 'Cormorant Garamond', serif;
+  --body-font: 'DM Sans', sans-serif;
+  --fork-bg: rgba(176,125,90,0.07);
+  --fork-border: rgba(176,125,90,0.22);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body-font);
+  transition: background 0.4s, color 0.4s;
+}
+
+body { transition: background 0.4s; }
+
+/* THEME PICKER SCREEN */
+#theme-screen {
+  position: fixed; inset: 0;
+  background: #272740;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.theme-screen-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(168,164,232,0.6);
+  margin-bottom: 2rem;
+}
+
+.theme-screen-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 7vw, 42px);
+  font-weight: 300;
+  color: #f2f0fc;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+.theme-screen-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: rgba(242,240,252,0.55);
+  margin-bottom: 3rem;
+  line-height: 1.6;
+  max-width: 320px;
+}
+
+.theme-options {
+  display: flex; flex-direction: column; gap: 12px;
+  width: 100%; max-width: 340px;
+}
+
+.theme-btn {
+  padding: 18px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(168,164,232,0.2);
+  background: rgba(168,164,232,0.06);
+  color: #f2f0fc;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.theme-btn:hover {
+  border-color: rgba(168,164,232,0.5);
+  background: rgba(168,164,232,0.12);
+}
+
+.theme-btn-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #f2f0fc;
+}
+
+.theme-btn-desc {
+  font-size: 12px;
+  color: rgba(242,240,252,0.45);
+  font-weight: 300;
+}
+
+/* MAIN DOC */
+#doc {
+  display: none;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* PAGES */
+.pages-wrap {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.page {
+  position: absolute; inset: 0;
+  overflow-y: auto;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.page.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.page.exit {
+  opacity: 0;
+  transform: translateY(-18px);
+  pointer-events: none;
+}
+
+.page-inner {
+  min-height: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 3.5rem 1.75rem 6rem;
+  display: flex; flex-direction: column;
+}
+
+/* NAV */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 1rem 1.75rem 1.5rem;
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 10;
+  max-width: 560px;
+  margin: 0 auto;
+  left: 50%; transform: translateX(-50%);
+}
+
+.nav-back {
+  font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  cursor: pointer; background: none; border: none;
+  font-family: var(--body-font);
+  transition: color 0.2s;
+  padding: 8px 0;
+}
+.nav-back:hover { color: var(--text-muted); }
+
+.nav-continue {
+  padding: 12px 28px;
+  border-radius: 100px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-faint);
+  color: var(--accent);
+  font-size: 13px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: var(--body-font);
+  transition: all 0.2s;
+}
+.nav-continue:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.nav-progress {
+  display: flex; gap: 5px; align-items: center;
+}
+.progress-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--border-mid);
+  transition: background 0.3s, transform 0.3s;
+}
+.progress-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+.progress-dot.done {
+  background: var(--accent);
+  opacity: 0.4;
+}
+
+/* TYPOGRAPHY */
+.eyebrow {
+  font-size: 11px; letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 1.25rem;
+  font-family: var(--body-font);
+}
+
+.page-title {
+  font-family: var(--heading-font);
+  font-size: clamp(30px, 8vw, 48px);
+  font-weight: 300;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 1.75rem;
+}
+
+.page-title em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.body-text {
+  font-family: var(--body-font);
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.body-text strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.body-text em {
+  font-style: italic;
+  color: var(--text);
+}
+
+.section-break {
+  width: 40px; height: 1px;
+  background: var(--accent-border);
+  margin: 2rem 0;
+}
+
+/* DISCLAIMER */
+.disclaimer-box {
+  border: 1px solid var(--accent-border);
+  background: var(--accent-faint);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.disclaimer-label {
+  font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+  font-family: var(--body-font);
+}
+
+.disclaimer-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-muted);
+  font-family: var(--body-font);
+}
+
+/* STATES */
+.state-item {
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.state-item:last-child { border-bottom: none; }
+
+.state-name {
+  font-family: var(--heading-font);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.state-desc {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-muted);
+  font-family: var(--body-font);
+}
+
+/* FORK */
+.fork-wrap {
+  border: 1px solid var(--fork-border);
+  background: var(--fork-bg);
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.fork-label {
+  font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-family: var(--body-font);
+}
+
+.fork-title {
+  font-family: var(--heading-font);
+  font-size: 22px;
+  font-style: italic;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.fork-option {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.fork-option-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+  font-family: var(--body-font);
+}
+
+.fork-option-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  font-family: var(--body-font);
+}
+
+/* AUDIT IMAGES */
+.audit-wrap {
+  margin: 1.5rem 0;
+}
+
+.audit-img {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.audit-transcription {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.audit-transcription-label {
+  font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.75rem;
+  font-family: var(--body-font);
+}
+
+.audit-line {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-muted);
+  font-family: var(--body-font);
+}
+
+.audit-line strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* SEASON COMPARISON */
+.season-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 1.5rem 0;
+}
+
+.season-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+}
+
+.season-card-label {
+  font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 0.75rem;
+  font-family: var(--body-font);
+}
+
+.season-state {
+  font-size: 13px;
+  font-family: var(--heading-font);
+  font-style: italic;
+  color: var(--text-muted);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.season-state:last-child { border-bottom: none; }
+.season-state.accent { color: var(--accent); }
+
+/* VISION SECTION */
+.vision-card {
+  background: #272740;
+  border-radius: 14px;
+  padding: 1.75rem 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.vision-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 300;
+  color: #a8a4e8;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+.vision-tagline {
+  font-size: 12px; letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(168,164,232,0.5);
+  margin-bottom: 1.25rem;
+}
+
+.vision-desc {
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(242,240,252,0.65);
+  font-family: 'DM Sans', sans-serif;
+  margin-bottom: 1.5rem;
+}
+
+.vision-link {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 100px;
+  border: 1px solid rgba(168,164,232,0.35);
+  background: rgba(168,164,232,0.08);
+  color: #a8a4e8;
+  font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.vision-link:hover {
+  background: rgba(168,164,232,0.15);
+  border-color: rgba(168,164,232,0.6);
+}
+
+/* CLOSING */
+.closing-sig {
+  font-family: var(--heading-font);
+  font-size: 24px;
+  font-style: italic;
+  color: var(--text);
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.calendly-btn {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 14px 32px;
+  border-radius: 100px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-family: var(--body-font);
+  transition: opacity 0.2s;
+}
+.calendly-btn:hover { opacity: 0.85; }
+
+.ptf-wordmark {
+  font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 3rem;
+  font-family: var(--body-font);
+}
+
+/* COVER PAGE special */
+.cover-page .page-inner {
+  justify-content: center;
+  min-height: 100vh;
+  padding-top: 4rem;
+  padding-bottom: 7rem;
+}
+
+.cover-ornament {
+  width: 40px; height: 2px;
+  background: var(--accent);
+  margin-bottom: 2rem;
+}
+
+/* Fade in on load */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page.active .page-inner > * {
+  animation: fadeUp 0.5s ease both;
+}
+.page.active .page-inner > *:nth-child(1) { animation-delay: 0.05s; }
+.page.active .page-inner > *:nth-child(2) { animation-delay: 0.12s; }
+.page.active .page-inner > *:nth-child(3) { animation-delay: 0.18s; }
+.page.active .page-inner > *:nth-child(4) { animation-delay: 0.24s; }
+.page.active .page-inner > *:nth-child(5) { animation-delay: 0.30s; }
+.page.active .page-inner > *:nth-child(6) { animation-delay: 0.36s; }
+.page.active .page-inner > *:nth-child(7) { animation-delay: 0.42s; }
+.page.active .page-inner > *:nth-child(8) { animation-delay: 0.48s; }
+
+
+/* AUDIO PLAYER */
+.audio-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: 1px solid var(--accent-border);
+  border-radius: 100px;
+  padding: 7px 16px 7px 12px;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--body-font);
+  font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  margin-bottom: 1.5rem;
+  align-self: flex-start;
+}
+.audio-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.audio-btn.playing { background: var(--accent-soft); }
+.audio-btn svg { flex-shrink: 0; transition: all 0.2s; }
+
+.audio-progress-wrap {
+  width: 100%; height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  margin-bottom: 1.75rem;
+  display: none;
+}
+.audio-progress-wrap.visible { display: block; }
+.audio-progress-bar {
+  height: 100%; width: 0%;
+  background: var(--accent);
+  border-radius: 1px;
+  transition: width 0.25s linear;
+}
+
+/* FULL AUDIO MODE banner */
+.audio-mode-banner {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--accent);
+  font-family: var(--body-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.audio-mode-banner.visible { display: flex; }
+
+/* Theme screen audio option */
+.theme-btn.audio-theme {
+  border-color: rgba(168,164,232,0.35);
+  background: rgba(168,164,232,0.10);
+}
+.theme-btn.audio-theme:hover {
+  border-color: rgba(168,164,232,0.7);
+  background: rgba(168,164,232,0.18);
+}
+</style>
+</head>
+<body class="theme-balanced">
+
+<!-- THEME PICKER -->
+<div id="theme-screen">
+  <div class="theme-screen-eyebrow">Present Tense Finance</div>
+  <div class="theme-screen-title">How do you want<br><em style="font-style:italic;color:#a8a4e8">to read this?</em></div>
+  <div class="theme-screen-sub">No wrong answer. Just a small act of knowing yourself before we begin.</div>
+  <div class="theme-options">
+    <button class="theme-btn" onclick="startDoc('balanced')">
+      <span class="theme-btn-label">Balanced</span>
+      <span class="theme-btn-desc">Warm serif type, clean structure, PTF purple — considered and present</span>
+    </button>
+    <button class="theme-btn" onclick="startDoc('spare')">
+      <span class="theme-btn-label">Spare</span>
+      <span class="theme-btn-desc">Clean, minimal, stripped back — nothing extra</span>
+    </button>
+    <button class="theme-btn" onclick="startDoc('warm')">
+      <span class="theme-btn-label">Warm</span>
+      <span class="theme-btn-desc">Soft tones, organic feel — like something handmade</span>
+    </button>
+      <button class="theme-btn audio-theme" onclick="startDoc('balanced', true)">
+      <span class="theme-btn-label">Listen</span>
+      <span class="theme-btn-desc">Full audio mode — Vincent narrates, pages advance automatically</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN DOC -->
+<div id="doc">
+  <div class="pages-wrap" id="pages-wrap">
+
+    <!-- PAGE 0: COVER -->
+    <div class="page cover-page active" id="page-0">
+      <div class="page-inner">
+        <div class="cover-ornament"></div>
+        <div class="eyebrow">Present Tense Finance</div>
+        <div class="page-title">Wave-Based<br><em>Structure</em></div>
+        <p class="body-text">A guide to building a daily rhythm that works <em>with</em> your nervous system — not against it.</p>
+        <div class="section-break"></div>
+        <p class="body-text" style="font-size:14px;">By Vincent &nbsp;·&nbsp; Present Tense Finance</p>
+      </div>
+    </div>
+
+    <!-- PAGE 1: DISCLAIMER + OPENING -->
+    <div class="page" id="page-1">
+      <div class="page-inner">
+        <div class="disclaimer-box">
+          <div class="disclaimer-label">Before you begin</div>
+          <div class="disclaimer-text">Everything in this guide assumes a baseline of nervous system regulation. Not calm — calm isn't the bar. But enough steadiness to read and reflect without becoming overwhelmed.<br><br>If you're in acute crisis or completely flooded right now — tend to the immediate thing first. This will be here when you surface.<br><br>A simple check: can you sit with a mildly uncomfortable thought for thirty seconds without needing to escape it? If yes, you're in the window.</div>
+        </div>
+        <div class="section-break"></div>
+        <div class="eyebrow">The beginning</div>
+        <div class="page-title">There was a season where my day had <em>no shape.</em></div>
+        <p class="body-text">Not because I was lazy. Not because I didn't know better. But because the weight I was carrying — job loss, grief, the particular exhaustion of a life mid-reorganization — had made the usual structures feel hostile. A to-do list felt like an accusation. A time-blocked calendar felt like a dare.</p>
+        <p class="body-text">I knew what good days looked like in theory. I'd built spreadsheets. I understood the numbers. But my map was distorted and my feelings were jumbled, and no amount of calendars, to-do lists, or time-blocking apps was going to fix that — because the problem wasn't my tools. The problem was that my nervous system was running the show, and nobody had consulted it when the schedule was made.</p>
+        <p class="body-text">So I did what I try to do with the people I work with. I audited.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 2: THE AUDIT -->
+    <div class="page" id="page-2">
+      <div class="page-inner">
+        <div class="eyebrow">The process</div>
+        <div class="page-title">The Energy <em>Audit</em></div>
+        <p class="body-text">Not my budget this time. My day. Twenty-four hours, honest and granular — what I was actually doing, when, and most importantly, how each piece felt in my body before, during, and after. Not what I thought I should be doing. What was actually happening.</p>
+        <p class="body-text">Something unexpected came out of that audit before I'd even built anything from it. I started doing things I already knew were good for me. Not because I'd discovered something new. Because the act of looking closely had made the latent visible. The capacity was always there. It just hadn't been seen.</p>
+        <p class="body-text">That's when I understood something that eventually became a whole other conversation: the problem was never laziness. It was <em>latency.</em></p>
+        <div class="section-break"></div>
+        <p class="body-text" style="font-size:14px;"><strong>An energy audit is not a time audit.</strong> You're not trying to optimize. You're trying to understand the texture of your day — what draws from you and what restores you. For each thing you did, notice three things: what it was, roughly when, and how it felt in your body. Not how you think it should have felt. Just the felt sense.</p>
+        <p class="body-text" style="font-size:14px;">You're not grading yourself. You're collecting data.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 3: THE ACTUAL AUDIT -->
+    <div class="page" id="page-3">
+      <div class="page-inner">
+        <div class="eyebrow">The real thing</div>
+        <div class="page-title">Here's what <em>mine</em> looked like.</div>
+        <p class="body-text" style="font-size:14px;">Messy. Honest. Real. This is the actual page from the day I did it.</p>
+
+        <div class="audit-wrap">
+          <img class="audit-img" src="audit1.jpeg" alt="Vincent's handwritten schedule audit, page 1" />
+          <img class="audit-img" src="audit2.jpeg" alt="Vincent's handwritten schedule audit, page 2" />
+
+          <div class="audit-transcription">
+            <div class="audit-transcription-label">Transcription</div>
+            <div class="audit-line"><strong>6p – 6:50p</strong> — tutoring</div>
+            <div class="audit-line"><strong>6:50 – 8:20</strong> — break (90 min): feel the weight of unanswered texts, Alyssa responding, texting Joyce, THERAPY GECKO, think about cooking / hesitate, texting Adam</div>
+            <div class="audit-line"><strong>8:20 – 11:15p</strong> — get off ass to cook (~3 hr): music on, argue with mom, apply for some jobs, shoot the sh*t</div>
+            <div class="audit-line"><strong>11:15p – 12:50am</strong> — asleep for part, chess in bed (~1.5 hr)</div>
+            <div class="audit-line"><strong>12:15a – 1:20a</strong> — word puzzle (30 min)</div>
+            <div class="audit-line"><strong>1:20 – 1:34</strong> — finish dishes</div>
+            <div class="audit-line"><strong>1:34 – 2:01</strong> — chess, then coloring</div>
+            <div class="audit-line"><strong>2:01 – 3:45</strong> — chess (angry)</div>
+            <div class="audit-line"><strong>3:42</strong> — eat a snack &nbsp;·&nbsp; <strong>5:50</strong> PS5 &nbsp;·&nbsp; <strong>6:12</strong> in bed</div>
+            <div class="audit-line"><strong>10:30a</strong> — wake up &nbsp;·&nbsp; <strong>11–12</strong> orientation &nbsp;·&nbsp; <strong>12–1</strong> lie in bed</div>
+            <div class="audit-line"><strong>★ 1pm</strong> — Claude: restructure, prep tutor &nbsp;·&nbsp; <strong>2:10</strong> more restructure, vid idea &nbsp;·&nbsp; <strong>2:20</strong> session limit / break</div>
+            <div class="audit-line"><strong>3:07</strong> — rest, bed: chat, chess &nbsp;·&nbsp; <strong>4:18</strong> get up, eat snack &nbsp;·&nbsp; <strong>4:30</strong> showered &nbsp;·&nbsp; <strong>5pm</strong> prep tutor loadout</div>
+          </div>
+        </div>
+
+        <p class="body-text" style="font-size:14px;margin-top:0.5rem;">From this, a pattern started to emerge. Not a schedule — a rhythm.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 4: THE FRACTURES -->
+    <div class="page" id="page-4">
+      <div class="page-inner">
+        <div class="eyebrow">What the audit actually showed</div>
+        <div class="page-title">First I saw the <em>fractures.</em></div>
+        <p class="body-text">When I looked at my audit honestly, the first thing I noticed wasn't a pattern. It was a fracture.</p>
+        <p class="body-text">The 90-minute "break" that was really just floating — unanswered texts, hesitation, scrolling, not quite resting and not quite doing anything. The chess spiral that started as recovery and tipped into something agitated and consuming. The long stretch of cooking that bled into job applications that bled into conversation with no real transition between any of it.</p>
+        <p class="body-text">States without edges. Rest that didn't restore. Work that didn't end cleanly.</p>
+        <p class="body-text">Nothing was catastrophically wrong. But nothing was landing either. The day had activity without rhythm — and a nervous system under load needs rhythm more than it needs productivity.</p>
+        <div class="section-break"></div>
+        <p class="body-text">What was missing wasn't more discipline. It was structure that accounted for how energy actually moves.</p>
+        <p class="body-text">The six states didn't come from a book. They came from looking at the fractures and asking: <em>what would have to be true for this to feel different?</em></p>
+        <p class="body-text">I didn't answer that question alone. I thought out loud — with something that could reflect it back. For you that might be a friend, a mentor, a therapist, a coach, or a conversation with an AI. The tool matters less than the act of externalizing it. Some things only become visible when you say them out loud to something outside yourself.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 7: THE SIX STATES -->
+    <div class="page" id="page-5">
+      <div class="page-inner">
+        <div class="eyebrow">What surfaced</div>
+        <div class="page-title">The six <em>states</em></div>
+        <p class="body-text">My day wasn't a flat line of tasks. It was a series of states, each with its own texture, its own energy demand, its own natural entry and exit point.</p>
+
+        <div class="state-item">
+          <div class="state-name">Activation</div>
+          <div class="state-desc">How the day begins. Morning routine — waking, brushing teeth, showering, getting dressed. Not glamorous, but load-bearing. The transition from sleep to presence.</div>
+        </div>
+        <div class="state-item">
+          <div class="state-name">Immersion</div>
+          <div class="state-desc">Deep, engaged work. Creative output, focused problem-solving. Where meaningful things happen — and where, if you stay too long without awareness, burnout quietly accumulates.</div>
+        </div>
+        <div class="state-item">
+          <div class="state-name">Re-engage</div>
+          <div class="state-desc">Lighter work. Cooking, cleaning, laundry. Things that occupy your hands without demanding your full cognitive presence. Often exactly what the nervous system needs between heavier states.</div>
+        </div>
+        <div class="state-item">
+          <div class="state-name">Transition Reset</div>
+          <div class="state-desc">The often-skipped state that makes everything else work. Deliberate decompression before you shift gears. Without it, you're not transitioning — you're just stopping. The nervous system notices the difference.</div>
+        </div>
+        <div class="state-item">
+          <div class="state-name">Recovery</div>
+          <div class="state-desc">True rest. A walk outside, a conversation with someone you trust, light content that doesn't demand anything from you. It refills something that immersion spends.</div>
+        </div>
+        <div class="state-item">
+          <div class="state-name">Closure</div>
+          <div class="state-desc">How the day ends. The mirror of activation — a wind-down routine that signals to your nervous system that the day is complete and it's allowed to let go.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 7: FORK ONE -->
+    <div class="page" id="page-6">
+      <div class="page-inner">
+        <div class="eyebrow">A pause</div>
+        <div class="page-title">A fork in<br>the <em>road.</em></div>
+        <p class="body-text">Before we go further, a choice. How you proceed depends on where you are and what you need.</p>
+
+        <div class="fork-wrap">
+          <div class="fork-label">Your path</div>
+          <div class="fork-option">
+            <div class="fork-option-title">Option one — Build from scratch</div>
+            <div class="fork-option-body">You want to sit with your own audit, identify your own states, and construct something entirely yours. The most labor-intensive path and the most precise. If a thing needs to feel like yours before you'll use it, this is your path.</div>
+          </div>
+          <div class="fork-option">
+            <div class="fork-option-title">Option two — Borrow what I built</div>
+            <div class="fork-option-body">You resonate with the six states and want to try them on. A reasonable middle path — take what lands, leave what doesn't. And if you're feeling creative, rename them. A state claimed with your own language is a state you'll actually use.</div>
+          </div>
+          <div class="fork-option">
+            <div class="fork-option-title">Option three — Use mine directly</div>
+            <div class="fork-option-body">You're not in a place to design anything right now, and that's okay. Use the framework as described. Just know it was built for one person's specific season, and that person isn't you. If it helps, great. If it doesn't, that's not a you problem.</div>
+          </div>
+        </div>
+
+        <p class="body-text" style="font-size:14px;">There's no wrong answer. The only wrong move is forcing yourself down a path that doesn't fit your current capacity — which is exactly what this whole framework is trying to move you away from.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 8: LOAD FACTORS -->
+    <div class="page" id="page-7">
+      <div class="page-inner">
+        <div class="eyebrow">The weight you carry</div>
+        <div class="page-title">Load <em>factors</em></div>
+        <p class="body-text">Every season carries weight. The question isn't whether you're carrying something — it's what, and how much.</p>
+        <p class="body-text">I call these <strong>load factors.</strong> The conditions present in your life that shape how much capacity you have on any given day. For me, in the season where this framework was born, the load factors were unemployment and grief. Both heavy. Both chronic. Both capable of making a normal Tuesday feel like wading through concrete.</p>
+        <p class="body-text">But load factors aren't always that dramatic. Maybe you hate your job and spend eight hours a day managing that low-grade dread. Maybe you're a single parent and the mental load of holding everything together for someone else leaves very little for yourself by evening. Maybe you're in recovery. Maybe you're just in a season of too much.</p>
+        <p class="body-text">The load factor isn't a character flaw. It's a condition. Any structure you build has to account for it honestly — because a framework designed for a low-load season will fail you in a high-load one, and that failure will feel personal even when it isn't.</p>
+
+        <div class="disclaimer-box" style="margin-top:1.5rem;">
+          <div class="disclaimer-label">A question to sit with</div>
+          <div class="disclaimer-text" style="font-style:italic;">What is present in my life right now that is costing me capacity — even when I'm not actively thinking about it?<br><br><span style="font-style:normal;font-size:13px;">You don't need to solve it. You just need to name it.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 9: SEASONS -->
+    <div class="page" id="page-8">
+      <div class="page-inner">
+        <div class="eyebrow">Flexibility is a feature</div>
+        <div class="page-title">Seasons <em>change.</em><br>So does the framework.</div>
+        <p class="body-text">The framework you build today is not the framework you'll use forever. That's not a flaw — that's the point.</p>
+        <p class="body-text">When I built wave-based structure, I was unemployed and grieving. My days had no external shape, which meant I had to construct one entirely from the inside. Six states made sense for that season because I had the time and the need for that level of granularity.</p>
+        <p class="body-text">But that season is changing. I'm moving toward full-time work — and the framework needs to move with me.</p>
+
+        <div class="season-compare">
+          <div class="season-card">
+            <div class="season-card-label">This season</div>
+            <div class="season-state accent">Activation</div>
+            <div class="season-state">Immersion</div>
+            <div class="season-state">Re-engage</div>
+            <div class="season-state">Transition Reset</div>
+            <div class="season-state">Recovery</div>
+            <div class="season-state accent">Closure</div>
+          </div>
+          <div class="season-card">
+            <div class="season-card-label">Next season</div>
+            <div class="season-state accent">Activation</div>
+            <div class="season-state">The work day</div>
+            <div class="season-state" style="font-size:11px;font-style:normal;color:var(--text-faint);">commute absorbs transition reset</div>
+            <div class="season-state accent">Closure</div>
+          </div>
+        </div>
+
+        <p class="body-text">Same framework. Different season. Completely different shape.</p>
+        <p class="body-text">The mistake most productivity systems make is assuming your life is stable enough for a fixed answer. Wave-based structure assumes it isn't. Hold it loosely. When now changes, you're allowed to change with it. That's not inconsistency. That's attunement.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 10: FORK TWO -->
+    <div class="page" id="page-9">
+      <div class="page-inner">
+        <div class="eyebrow">Another pause</div>
+        <div class="page-title">Take a <em>moment.</em></div>
+        <p class="body-text">You've just read about two different seasons and two different shapes the framework took. Now turn it toward yourself.</p>
+        <p class="body-text"><em>What season are you in right now? And what does that season actually require?</em></p>
+
+        <div class="fork-wrap">
+          <div class="fork-label">Check in with yourself</div>
+          <div class="fork-option">
+            <div class="fork-option-title">If you built your own states</div>
+            <div class="fork-option-body">Look at them through this lens. Are they sized for your current load, or are you designing for a version of your life that isn't quite real yet?</div>
+          </div>
+          <div class="fork-option">
+            <div class="fork-option-title">If you borrowed mine</div>
+            <div class="fork-option-body">Ask the same question. Do all six states fit this season, or are some of them aspirational? There's no shame in starting with three. Activation and closure alone — a morning and an evening anchor — are more than most people have, and they're enough to begin.</div>
+          </div>
+        </div>
+
+        <p class="body-text" style="font-size:14px;">The framework that gets used is always better than the framework that's perfect on paper.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 11: VISION -->
+    <div class="page" id="page-10">
+      <div class="page-inner">
+        <div class="eyebrow">The companion tool</div>
+        <div class="page-title"><em>Vision</em></div>
+        <p class="body-text">Once the framework had a shape, I needed somewhere to live it. So I built a tool. I called it Vision — after the Marvel character. Someone who holds extraordinary capacity quietly, without making a show of it. That felt right.</p>
+        <p class="body-text">Vision is a small digital companion. It's not a calendar. It's not a to-do list. It holds the framework — your states, your sequence — and lets you move through them with a simple tap.</p>
+
+        <div class="vision-card">
+          <div class="vision-name">Vision</div>
+          <div class="vision-tagline">Present Tense Finance</div>
+          <div class="vision-desc">The emergency protocols are off-ramps for hard moments — not productivity features. The stats page accumulates only wins. Nothing resets. What you've done is earned and kept.</div>
+          <a class="vision-link" href="https://dinv.github.io/vision/" target="_blank">Open Vision →</a>
+        </div>
+
+        <p class="body-text" style="font-size:14px;">Vision was built for me, which means it reflects my states and my season. If you've borrowed the framework, it's available to try as-is — with the same caveat. Treat it as a starting point, not a prescription.</p>
+      </div>
+    </div>
+
+
+    <!-- PAGE 11: VISION HOW-TO -->
+    <div class="page" id="page-11">
+      <div class="page-inner">
+        <div class="eyebrow">If you want to use the tool</div>
+        <div class="page-title">How to use <em>Vision</em></div>
+        <p class="body-text">Vision is designed to be lightweight. Here's all you need to know to get started.</p>
+        <p class="body-text">When you open it, you'll see your six states listed for the day. <strong>Tap a state when you enter it.</strong> That's the core interaction — nothing more complicated than that.</p>
+        <p class="body-text">At the top right is a small color circle. Tap it to change the theme. Pick whatever feels right.</p>
+
+        <div class="disclaimer-box">
+          <div class="disclaimer-label">Emergency protocols</div>
+          <div class="disclaimer-text">The two buttons at the bottom marked with dashed borders are your emergency protocols. Protocol A is for moments when you're spiraling or looping and can't find the exit. Protocol B is for moments of acute overwhelm. If you're having a hard moment, tap the one that fits and let it walk you through. You don't have to think — just follow the steps.</div>
+        </div>
+
+        <p class="body-text">When your day is complete, tap <strong>"day complete."</strong> The stats page unlocks — showing your days completed, partial days, and how many times you've used each protocol — and then seals until tomorrow. The day is done. It's recorded. You can't go back and second-guess it, which is the point.</p>
+        <p class="body-text">Nothing resets. Nothing is lost. Every number only goes up.</p>
+        <div class="section-break"></div>
+        <p class="body-text" style="font-size:14px;">One last thing: if Vision doesn't fit your states or your season, that's expected. It was built for one person. Use what works, ignore what doesn't, and trust your own read on what your nervous system actually needs.</p>
+        <div style="text-align:center;margin-top:1.5rem;">
+          <a class="vision-link" href="https://dinv.github.io/vision/" target="_blank" style="display:inline-block;">Open Vision →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 12: CLOSING -->
+    <div class="page" id="page-12">
+      <div class="page-inner">
+        <div class="eyebrow">A closing note</div>
+        <div class="page-title">You made it <em>here.</em></div>
+        <p class="body-text">What you've just read is a distillation of a process that took me weeks of honest self-examination, iteration, and more than a few false starts. I'm glad it's now something I can hand to another person in a single sitting.</p>
+        <p class="body-text">If you take this, sit with it, build something for yourself, and never spend another moment or dollar going further — I mean this sincerely — that's enough. The fact that you gave this your time and attention is not lost on me. This was made with care, and you received it with care, and that exchange is complete and whole on its own.</p>
+        <p class="body-text">If something here opened a door you want to walk through with support, that's what I'm here for. The work I do with clients is exactly this — sitting with someone, helping them audit honestly, building something that actually fits their nervous system and their season. You don't have to figure it out alone if you don't want to.</p>
+        <p class="body-text">Either way, I'm rooting for you.</p>
+
+        <div class="section-break"></div>
+
+        <div class="closing-sig">— Vincent</div>
+        <p class="body-text" style="font-size:13px;margin-top:0.25rem;">Present Tense Finance &nbsp;·&nbsp; because how you feel matters</p>
+
+        <a class="calendly-btn" href="https://calendly.com/presenttensefinance/30min" target="_blank">Let's talk →</a>
+
+        <div class="ptf-wordmark" style="margin-top:2rem;">No pressure. No urgency. Whenever the time is right — if it ever is.</div>
+        <div class="ptf-wordmark">present tense finance</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-bar" id="nav-bar">
+    <button class="nav-back" id="nav-back" onclick="goBack()">← back</button>
+    <div class="nav-progress" id="nav-progress"></div>
+    <button class="nav-continue" id="nav-continue" onclick="goNext()">Continue</button>
+  </div>
+</div>
+
+<script>
+const TOTAL_PAGES = 13;
+let current = 0;
+
+function startDoc(theme, listenMode) {
+  audioMode = listenMode || false;
+  document.body.className = 'theme-' + (listenMode ? 'balanced' : theme);
+  document.getElementById('theme-screen').style.display = 'none';
+  document.getElementById('doc').style.display = 'block';
+  injectAudioControls();
+  renderProgress();
+  updateNav();
+  if (audioMode) setTimeout(() => toggleAudio(1), 600);
+}
+
+function renderProgress() {
+  const wrap = document.getElementById('nav-progress');
+  wrap.innerHTML = '';
+  for (let i = 0; i < TOTAL_PAGES; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot' + (i === current ? ' active' : i < current ? ' done' : '');
+    wrap.appendChild(dot);
+  }
+}
+
+function updateNav() {
+  const back = document.getElementById('nav-back');
+  const cont = document.getElementById('nav-continue');
+  back.style.visibility = 'visible';
+  back.textContent = current === 0 ? '↺ start over' : '← back';
+  if (current === TOTAL_PAGES - 1) {
+    cont.style.display = 'none';
+  } else {
+    cont.style.display = 'block';
+    cont.textContent = current === 0 ? 'Begin' : 'Continue';
+  }
+}
+
+function goNext() {
+  if (current >= TOTAL_PAGES - 1) return;
+  stopCurrentAudio();
+  const oldPage = document.getElementById('page-' + current);
+  oldPage.classList.remove('active');
+  oldPage.classList.add('exit');
+  setTimeout(() => oldPage.classList.remove('exit'), 500);
+  current++;
+  const newPage = document.getElementById('page-' + current);
+  newPage.scrollTop = 0;
+  newPage.classList.add('active');
+  renderProgress();
+  updateNav();
+  if (audioMode && current >= 1 && current <= 12) {
+    setTimeout(() => toggleAudio(current), 400);
+  }
+}
+
+function goBack() {
+  stopCurrentAudio();
+  if (current <= 0) {
+    // return to theme picker
+    document.getElementById('doc').style.display = 'none';
+    document.getElementById('theme-screen').style.display = 'flex';
+    current = 0;
+    const coverPage = document.getElementById('page-0');
+    coverPage.classList.add('active');
+    return;
+  }
+  const oldPage = document.getElementById('page-' + current);
+  oldPage.classList.remove('active');
+  current--;
+  const newPage = document.getElementById('page-' + current);
+  newPage.scrollTop = 0;
+  newPage.classList.add('active');
+  renderProgress();
+  updateNav();
+}
+
+// AUDIO
+let audioMode = false;
+let currentAudio = null;
+const AUDIO_FILES = {
+  1: 'page-1.m4a',
+  2: 'page-2.m4a',
+  3: 'page-3.m4a',
+  4: 'page-4.m4a',
+  5: 'page-5.m4a',
+  6: 'page-6.m4a',
+  7: 'page-7.m4a',
+  8: 'page-8.m4a',
+  9: 'page-9.m4a',
+  10: 'page-10.m4a',
+  11: 'page-11.m4a',
+  12: 'page-12.m4a'
+};
+
+function stopCurrentAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  document.querySelectorAll('.audio-btn').forEach(btn => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+  });
+  document.querySelectorAll('.audio-progress-wrap').forEach(w => {
+    w.classList.remove('visible');
+    w.querySelector('.audio-progress-bar').style.width = '0%';
+  });
+}
+
+function audioPlayIcon() {
+  return '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="3,2 12,7 3,12" fill="currentColor"/></svg>';
+}
+
+function audioPauseIcon() {
+  return '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="4" height="10" fill="currentColor"/><rect x="8" y="2" width="4" height="10" fill="currentColor"/></svg>';
+}
+
+function toggleAudio(pageNum) {
+  const btn = document.getElementById('audio-btn-' + pageNum);
+  const progressWrap = document.getElementById('audio-progress-' + pageNum);
+  const bar = progressWrap ? progressWrap.querySelector('.audio-progress-bar') : null;
+
+  if (currentAudio && !currentAudio.paused) {
+    // pause
+    currentAudio.pause();
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    return;
+  }
+
+  if (currentAudio && currentAudio.paused && currentAudio.src.includes(AUDIO_FILES[pageNum])) {
+    // resume
+    currentAudio.play();
+    btn.classList.add('playing');
+    btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
+    return;
+  }
+
+  stopCurrentAudio();
+
+  const audio = new Audio(AUDIO_FILES[pageNum]);
+  currentAudio = audio;
+
+  if (progressWrap) progressWrap.classList.add('visible');
+  btn.classList.add('playing');
+  btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
+
+  audio.addEventListener('timeupdate', () => {
+    if (bar && audio.duration) {
+      bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    if (progressWrap) { progressWrap.classList.remove('visible'); }
+    if (bar) bar.style.width = '0%';
+    currentAudio = null;
+    if (audioMode && current < TOTAL_PAGES - 1) {
+      setTimeout(() => goNext(), 800);
+    }
+  });
+
+  audio.addEventListener('error', () => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    if (progressWrap) progressWrap.classList.remove('visible');
+    currentAudio = null;
+  });
+
+  audio.play().catch(() => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    currentAudio = null;
+  });
+}
+
+function injectAudioControls() {
+  for (let i = 1; i <= 12; i++) {
+    const page = document.getElementById('page-' + i);
+    if (!page) continue;
+    const inner = page.querySelector('.page-inner');
+    if (!inner) continue;
+    if (document.getElementById('audio-btn-' + i)) continue;
+
+    // Banner for audio mode
+    const banner = document.createElement('div');
+    banner.className = 'audio-mode-banner' + (audioMode ? ' visible' : '');
+    banner.id = 'audio-banner-' + i;
+    banner.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="3,2 12,7 3,12" fill="currentColor"/></svg> narration available for this page';
+
+    // Button
+    const btn = document.createElement('button');
+    btn.className = 'audio-btn';
+    btn.id = 'audio-btn-' + i;
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    btn.onclick = () => toggleAudio(i);
+
+    // Progress
+    const prog = document.createElement('div');
+    prog.className = 'audio-progress-wrap';
+    prog.id = 'audio-progress-' + i;
+    prog.innerHTML = '<div class="audio-progress-bar"></div>';
+
+    inner.insertBefore(prog, inner.firstChild);
+    inner.insertBefore(btn, inner.firstChild);
+    inner.insertBefore(banner, inner.firstChild);
+  }
+}
+
+</script>
+</body>
+</html>
