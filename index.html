@@ -1056,9 +1056,9 @@ function updateNav() {
   }
 }
 
-function goNext() {
+function goNext(fromAudioEnd) {
   if (current >= TOTAL_PAGES - 1) return;
-  stopCurrentAudio();
+  if (!fromAudioEnd) stopCurrentAudio();
   const oldPage = document.getElementById('page-' + current);
   oldPage.classList.remove('active');
   oldPage.classList.add('exit');
@@ -1070,7 +1070,7 @@ function goNext() {
   renderProgress();
   updateNav();
   if (audioMode && current >= 1 && current <= 12) {
-    setTimeout(() => toggleAudio(current), 400);
+    setTimeout(() => playNextAudio(current), 400);
   }
 }
 
@@ -1159,14 +1159,55 @@ function attachEndedHandler(audio, pageNum, btn, bar) {
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
     if (bar) bar.style.width = '0%';
-    currentAudio = null;
-    currentAudioPage = null;
+    // don't null currentAudio here — playNextAudio needs to reuse it
     currentEndedHandler = null;
     if (audioMode && current < TOTAL_PAGES - 1) {
-      setTimeout(() => goNext(), 800);
+      setTimeout(() => goNext(true), 800);
+    } else {
+      currentAudio = null;
+      currentAudioPage = null;
     }
   };
   audio.addEventListener('ended', currentEndedHandler);
+}
+
+function playNextAudio(pageNum) {
+  const btn = document.getElementById('audio-btn-' + pageNum);
+  const progressWrap = document.getElementById('audio-progress-' + pageNum);
+  const bar = progressWrap ? progressWrap.querySelector('.audio-progress-bar') : null;
+
+  if (!currentAudio) {
+    toggleAudio(pageNum);
+    return;
+  }
+
+  currentAudioPage = pageNum;
+  currentAudio.src = AUDIO_FILES[pageNum];
+  currentAudio.currentTime = 0;
+
+  btn.classList.add('playing');
+  btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
+
+  currentAudio.addEventListener('timeupdate', function onTime() {
+    if (!currentAudio || currentAudioPage !== pageNum) {
+      currentAudio && currentAudio.removeEventListener('timeupdate', onTime);
+      return;
+    }
+    if (bar && currentAudio.duration) {
+      bar.style.width = (currentAudio.currentTime / currentAudio.duration * 100) + '%';
+    }
+    const timeEl = document.getElementById('audio-time-' + pageNum);
+    if (timeEl && currentAudio.duration) {
+      timeEl.textContent = fmtTime(Math.floor(currentAudio.currentTime)) + ' / ' + fmtTime(Math.floor(currentAudio.duration));
+    }
+  });
+
+  attachEndedHandler(currentAudio, pageNum, btn, bar);
+
+  currentAudio.play().catch(() => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+  });
 }
 
 function toggleAudio(pageNum) {
