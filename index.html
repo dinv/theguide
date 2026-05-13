@@ -1104,6 +1104,8 @@ function fmtTime(s) {
 
 let audioMode = false;
 let currentAudio = null;
+let currentAudioPage = null;
+let currentEndedHandler = null;
 const AUDIO_FILES = {
   1: 'page-1.m4a',
   2: 'page-2.m4a',
@@ -1121,9 +1123,14 @@ const AUDIO_FILES = {
 
 function stopCurrentAudio() {
   if (currentAudio) {
+    if (currentEndedHandler) {
+      currentAudio.removeEventListener('ended', currentEndedHandler);
+      currentEndedHandler = null;
+    }
     currentAudio.pause();
     currentAudio.currentTime = 0;
     currentAudio = null;
+    currentAudioPage = null;
   }
   document.querySelectorAll('.audio-btn').forEach(btn => {
     btn.classList.remove('playing');
@@ -1144,21 +1151,40 @@ function audioPauseIcon() {
   return '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="4" height="10" fill="currentColor"/><rect x="8" y="2" width="4" height="10" fill="currentColor"/></svg>';
 }
 
+function attachEndedHandler(audio, pageNum, btn, bar) {
+  if (currentEndedHandler) {
+    audio.removeEventListener('ended', currentEndedHandler);
+  }
+  currentEndedHandler = () => {
+    btn.classList.remove('playing');
+    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
+    if (bar) bar.style.width = '0%';
+    currentAudio = null;
+    currentAudioPage = null;
+    currentEndedHandler = null;
+    if (audioMode && current < TOTAL_PAGES - 1) {
+      setTimeout(() => goNext(), 800);
+    }
+  };
+  audio.addEventListener('ended', currentEndedHandler);
+}
+
 function toggleAudio(pageNum) {
   const btn = document.getElementById('audio-btn-' + pageNum);
   const progressWrap = document.getElementById('audio-progress-' + pageNum);
   const bar = progressWrap ? progressWrap.querySelector('.audio-progress-bar') : null;
 
-  if (currentAudio && !currentAudio.paused) {
-    // pause
+  if (currentAudio && !currentAudio.paused && currentAudioPage === pageNum) {
+    // pause — keep ended handler attached so resume will still autoadvance
     currentAudio.pause();
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
     return;
   }
 
-  if (currentAudio && currentAudio.paused && currentAudio.src.includes(AUDIO_FILES[pageNum])) {
-    // resume
+  if (currentAudio && currentAudio.paused && currentAudioPage === pageNum) {
+    // resume — re-attach ended handler in case it was lost
+    attachEndedHandler(currentAudio, pageNum, btn, bar);
     currentAudio.play();
     btn.classList.add('playing');
     btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
@@ -1169,8 +1195,8 @@ function toggleAudio(pageNum) {
 
   const audio = new Audio(AUDIO_FILES[pageNum]);
   currentAudio = audio;
+  currentAudioPage = pageNum;
 
-  
   btn.classList.add('playing');
   btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
 
@@ -1186,28 +1212,22 @@ function toggleAudio(pageNum) {
     }
   });
 
-  audio.addEventListener('ended', () => {
-    btn.classList.remove('playing');
-    btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
-    
-    if (bar) bar.style.width = '0%';
-    currentAudio = null;
-    if (audioMode && current < TOTAL_PAGES - 1) {
-      setTimeout(() => goNext(), 800);
-    }
-  });
+  attachEndedHandler(audio, pageNum, btn, bar);
 
   audio.addEventListener('error', () => {
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
-    
     currentAudio = null;
+    currentAudioPage = null;
+    currentEndedHandler = null;
   });
 
   audio.play().catch(() => {
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
     currentAudio = null;
+    currentAudioPage = null;
+    currentEndedHandler = null;
   });
 }
 
