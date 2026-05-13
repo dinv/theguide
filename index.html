@@ -205,12 +205,11 @@ body { transition: background 0.4s; }
 .nav-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
   padding: 1rem 1.75rem 1.5rem;
-  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
   z-index: 10;
-  max-width: 560px;
-  margin: 0 auto;
-  left: 50%; transform: translateX(-50%);
+  width: 100%;
 }
 
 .nav-back {
@@ -593,32 +592,54 @@ body { transition: background 0.4s; }
 
 
 /* AUDIO PLAYER */
+.audio-controls-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.audio-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+
+.audio-rewind-btn {
+  background: none; border: none;
+  padding: 4px 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-faint); cursor: pointer;
+  transition: opacity 0.2s; flex-shrink: 0;
+}
+.audio-rewind-btn:hover { opacity: 0.7; }
+
+.audio-time {
+  font-size: 11px; letter-spacing: 0.08em;
+  color: var(--text-faint);
+  font-family: var(--body-font);
+  min-width: 70px;
+}
+
 .audio-btn {
-  display: flex; align-items: center; gap: 8px;
-  background: none; border: 1px solid var(--accent-border);
-  border-radius: 100px;
-  padding: 7px 16px 7px 12px;
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none;
+  padding: 4px 0;
   color: var(--accent);
   cursor: pointer;
   font-family: var(--body-font);
-  font-size: 12px; letter-spacing: 0.1em;
+  font-size: 12px; letter-spacing: 0.12em;
   text-transform: uppercase;
-  transition: all 0.2s;
-  margin-bottom: 1.5rem;
-  align-self: flex-start;
+  transition: opacity 0.2s;
 }
-.audio-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
-.audio-btn.playing { background: var(--accent-soft); }
-.audio-btn svg { flex-shrink: 0; transition: all 0.2s; }
+.audio-btn:hover { opacity: 0.7; }
+.audio-btn.playing { opacity: 1; }
+.audio-btn svg { flex-shrink: 0; }
 
 .audio-progress-wrap {
   width: 100%; height: 2px;
   background: var(--border);
   border-radius: 1px;
-  margin-bottom: 1.75rem;
-  display: none;
+  margin-top: 8px;
+  display: block;
+  cursor: pointer;
 }
-.audio-progress-wrap.visible { display: block; }
 .audio-progress-bar {
   height: 100%; width: 0%;
   background: var(--accent);
@@ -999,7 +1020,17 @@ function startDoc(theme, listenMode) {
   injectAudioControls();
   renderProgress();
   updateNav();
-  if (audioMode) setTimeout(() => toggleAudio(1), 600);
+  if (audioMode) {
+    // skip cover, go straight to page 1
+    const cover = document.getElementById('page-0');
+    cover.classList.remove('active');
+    current = 1;
+    const p1 = document.getElementById('page-1');
+    p1.classList.add('active');
+    renderProgress();
+    updateNav();
+    setTimeout(() => toggleAudio(1), 600);
+  }
 }
 
 function renderProgress() {
@@ -1065,6 +1096,12 @@ function goBack() {
 }
 
 // AUDIO
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
 let audioMode = false;
 let currentAudio = null;
 const AUDIO_FILES = {
@@ -1093,9 +1130,10 @@ function stopCurrentAudio() {
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
   });
   document.querySelectorAll('.audio-progress-wrap').forEach(w => {
-    w.classList.remove('visible');
+    w.style.display="block";
     w.querySelector('.audio-progress-bar').style.width = '0%';
   });
+  document.querySelectorAll('.audio-time').forEach(t => t.textContent = '');
 }
 
 function audioPlayIcon() {
@@ -1132,7 +1170,7 @@ function toggleAudio(pageNum) {
   const audio = new Audio(AUDIO_FILES[pageNum]);
   currentAudio = audio;
 
-  if (progressWrap) progressWrap.classList.add('visible');
+  
   btn.classList.add('playing');
   btn.innerHTML = audioPauseIcon() + '<span>Pause</span>';
 
@@ -1140,12 +1178,18 @@ function toggleAudio(pageNum) {
     if (bar && audio.duration) {
       bar.style.width = (audio.currentTime / audio.duration * 100) + '%';
     }
+    const timeEl = document.getElementById('audio-time-' + pageNum);
+    if (timeEl && audio.duration) {
+      const cur = Math.floor(audio.currentTime);
+      const dur = Math.floor(audio.duration);
+      timeEl.textContent = fmtTime(cur) + ' / ' + fmtTime(dur);
+    }
   });
 
   audio.addEventListener('ended', () => {
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
-    if (progressWrap) { progressWrap.classList.remove('visible'); }
+    
     if (bar) bar.style.width = '0%';
     currentAudio = null;
     if (audioMode && current < TOTAL_PAGES - 1) {
@@ -1156,7 +1200,7 @@ function toggleAudio(pageNum) {
   audio.addEventListener('error', () => {
     btn.classList.remove('playing');
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
-    if (progressWrap) progressWrap.classList.remove('visible');
+    
     currentAudio = null;
   });
 
@@ -1175,28 +1219,58 @@ function injectAudioControls() {
     if (!inner) continue;
     if (document.getElementById('audio-btn-' + i)) continue;
 
-    // Banner for audio mode
-    const banner = document.createElement('div');
-    banner.className = 'audio-mode-banner' + (audioMode ? ' visible' : '');
-    banner.id = 'audio-banner-' + i;
-    banner.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polygon points="3,2 12,7 3,12" fill="currentColor"/></svg> narration available for this page';
+    // Controls wrap
+    const wrap = document.createElement('div');
+    wrap.className = 'audio-controls-wrap';
+    wrap.id = 'audio-controls-' + i;
 
-    // Button
+    // Row: play/pause + rewind + time
+    const row = document.createElement('div');
+    row.className = 'audio-row';
+
     const btn = document.createElement('button');
     btn.className = 'audio-btn';
     btn.id = 'audio-btn-' + i;
     btn.innerHTML = audioPlayIcon() + '<span>Listen</span>';
     btn.onclick = () => toggleAudio(i);
 
-    // Progress
-    const prog = document.createElement('div');
-    prog.className = 'audio-progress-wrap';
-    prog.id = 'audio-progress-' + i;
-    prog.innerHTML = '<div class="audio-progress-bar"></div>';
+    const rewindBtn = document.createElement('button');
+    rewindBtn.className = 'audio-rewind-btn';
+    rewindBtn.id = 'audio-rewind-' + i;
+    rewindBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3V1L4 4l4 3V5a5 5 0 1 1-5 5H1a7 7 0 1 0 7-7z" fill="currentColor"/><text x="5.5" y="11.5" font-size="5" fill="currentColor" font-family="sans-serif">10</text></svg>';
+    rewindBtn.title = 'Back 10s';
+    rewindBtn.onclick = () => {
+      if (currentAudio) currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 10);
+    };
 
-    inner.insertBefore(prog, inner.firstChild);
-    inner.insertBefore(btn, inner.firstChild);
-    inner.insertBefore(banner, inner.firstChild);
+    const timeEl = document.createElement('span');
+    timeEl.className = 'audio-time';
+    timeEl.id = 'audio-time-' + i;
+    timeEl.textContent = '';
+
+    row.appendChild(btn);
+    row.appendChild(rewindBtn);
+    row.appendChild(timeEl);
+
+    // Scrubber
+    const scrubWrap = document.createElement('div');
+    scrubWrap.className = 'audio-progress-wrap';
+    scrubWrap.id = 'audio-progress-' + i;
+
+    const scrubBar = document.createElement('div');
+    scrubBar.className = 'audio-progress-bar';
+
+    scrubWrap.appendChild(scrubBar);
+    scrubWrap.addEventListener('click', (e) => {
+      if (!currentAudio || !currentAudio.duration) return;
+      const rect = scrubWrap.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      currentAudio.currentTime = pct * currentAudio.duration;
+    });
+
+    wrap.appendChild(row);
+    wrap.appendChild(scrubWrap);
+    inner.insertBefore(wrap, inner.firstChild);
   }
 }
 
